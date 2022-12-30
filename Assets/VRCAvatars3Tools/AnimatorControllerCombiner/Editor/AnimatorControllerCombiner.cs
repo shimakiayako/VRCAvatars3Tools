@@ -18,6 +18,12 @@ namespace Gatosyocora.VRCAvatars3Tools
         private bool[] isCopyLayers;
         private bool[] isCopyParameters;
 
+        private int executionType = 0;
+        private string[] executionTypeOptions = new string[] {
+            "Add",
+            "Insert"
+        };
+
         private Vector2 srcControllerScrollPos = Vector2.zero;
         private Vector2 dstControllerScrollPos = Vector2.zero;
 
@@ -89,6 +95,8 @@ namespace Gatosyocora.VRCAvatars3Tools
             {
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.LabelField("Copy ↓", GUILayout.Width(60f));
+                GUIStyle style_radio = new GUIStyle(EditorStyles.radioButton);
+                executionType = GUILayout.SelectionGrid(executionType, executionTypeOptions, 2, style_radio);
                 GUILayout.FlexibleSpace();
             }
             EditorGUILayout.Space();
@@ -136,16 +144,47 @@ namespace Gatosyocora.VRCAvatars3Tools
             {
                 if (GUILayout.Button("Combine"))
                 {
-                    for (int i = 0; i < srcController.layers.Length; i++)
+                    if (this.executionType == 0)
                     {
-                        if (!isCopyLayers[i]) continue;
-                        AnimatorControllerUtility.AddLayer(dstController, srcController.layers[i], i == 0);
-                    }
+                        for (int i = 0; i < srcController.layers.Length; i++)
+                        {
+                            if (!isCopyLayers[i]) continue;
+                            AnimatorControllerUtility.AddLayer(dstController, srcController.layers[i], i == 0);
+                        }
 
-                    for (int i = 0; i < srcController.parameters.Length; i++)
+                        for (int i = 0; i < srcController.parameters.Length; i++)
+                        {
+                            if (!isCopyParameters[i]) continue;
+                            AnimatorControllerUtility.AddParameter(dstController, srcController.parameters[i]);
+                        }
+                    } else
                     {
-                        if (!isCopyParameters[i]) continue;
-                        AnimatorControllerUtility.AddParameter(dstController, srcController.parameters[i]);
+                        int dstLayerCounts = dstController.layers.Length;
+                        for (int i = 0; i < srcController.layers.Length; i++)
+                        {
+                            if (!isCopyLayers[i]) continue;
+                            AnimatorControllerUtility.AddLayer(dstController, srcController.layers[i], i == 0);
+                        }
+                        for (int i = 0; i < dstLayerCounts; i++)
+                        {
+                            AnimatorControllerUtility.AddLayer(dstController, dstController.layers[i], i == 0);
+                        }
+                        for (int i = 0; i < dstLayerCounts; i++)
+                        {
+                            var stateMachine = dstController.layers[0].stateMachine;
+                            dstController.RemoveLayer(0);
+                            if (stateMachine != null)
+                            {
+                                AnimatorControllerUtility.RemoveObjectsInStateMachineToAnimatorController(stateMachine);
+                            }
+                        }
+
+                        for (int i = 0; i < srcController.parameters.Length; i++)
+                        {
+                            if (!isCopyParameters[i]) continue;
+                            AnimatorControllerUtility.AddParameter(dstController, srcController.parameters[i]);
+                        }
+
                     }
                 }
             }
