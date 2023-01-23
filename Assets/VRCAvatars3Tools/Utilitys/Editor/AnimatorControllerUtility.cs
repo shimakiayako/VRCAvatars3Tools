@@ -403,6 +403,32 @@ namespace Gatosyocora.VRCAvatars3Tools.Utilitys
             }
         }
 
+        public static void RemoveObjectsInStateMachineToAnimatorController(AnimatorStateMachine stateMachine)
+        {
+            AssetDatabase.RemoveObjectFromAsset(stateMachine);
+
+            foreach (var transition in stateMachine.anyStateTransitions)
+            {
+                AssetDatabase.RemoveObjectFromAsset(transition);
+            }
+            foreach (var transition in stateMachine.entryTransitions)
+            {
+                AssetDatabase.RemoveObjectFromAsset(transition);
+            }
+            foreach (var behaviour in stateMachine.behaviours)
+            {
+                AssetDatabase.RemoveObjectFromAsset(behaviour);
+            }
+            foreach (var SubStateMachine in stateMachine.stateMachines)
+            {
+                foreach (var transition in stateMachine.GetStateMachineTransitions(SubStateMachine.stateMachine))
+                {
+                    AssetDatabase.RemoveObjectFromAsset(transition);
+                }
+                RemoveObjectsInStateMachineToAnimatorController(SubStateMachine.stateMachine);
+            }
+        }
+
         public static AnimatorController DuplicateAnimationLayerController(string originalControllerPath, string outputFolderPath, string avatarName)
         {
             var controllerName = $"{Path.GetFileNameWithoutExtension(originalControllerPath)}_{avatarName}.controller";
